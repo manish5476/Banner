@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.5K Ultra Generator | Ghost Clone Fix</title>
+    <title>1.5K Ultra | Perfect Image Engine</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,7 +16,9 @@
             --text-main: #fff;
             --text-sub: #ccc;
             --card-border: #333;
-            --glass-gradient: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.4) 100%);
+            
+            /* Enhanced Gradient for readability */
+            --glass-gradient: linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,0.6) 100%);
             --glass-border: rgba(255, 255, 255, 0.15);
             --pill-bg: rgba(255, 255, 255, 0.1);
         }
@@ -27,7 +29,7 @@
             --text-main: #000;
             --text-sub: #555;
             --card-border: #ccc;
-            --glass-gradient: linear-gradient(to top, rgba(255,255,255,1) 30%, rgba(255,255,255,0.4) 100%);
+            --glass-gradient: linear-gradient(to top, rgba(255,255,255,1) 20%, rgba(255,255,255,0.6) 100%);
             --glass-border: rgba(0, 0, 0, 0.1);
             --pill-bg: rgba(0, 0, 0, 0.05);
         }
@@ -128,15 +130,36 @@
             position: absolute;
             top: 0; left: 0;
             transform-origin: top left;
-            /* PREVIEW SCALING ONLY */
             transform: scale(0.278688); 
         }
 
+        /* --- NEW IMAGE ENGINE --- */
         .hero {
             height: 100%; width: 100%;
             position: absolute; top: 0; left: 0; z-index: 1;
+            overflow: hidden;
         }
-        .hero img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Layer 1: The Blurred Background (Atmosphere) */
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(60px) brightness(0.7); /* The magic sauce */
+            transform: scale(1.2); /* Remove white edges from blur */
+            z-index: 1;
+        }
+
+        /* Layer 2: The Main Product */
+        .hero-img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain; /* Default to FIT, not stretch */
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 2;
+            /* Default drop shadow for depth */
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+        }
 
         /* HIGH RES ELEMENTS */
         .brand-badge {
@@ -218,61 +241,43 @@
             text-shadow: 0 0 40px rgba(255, 69, 0, 0.4);
         }
 
-        /* MODAL FIX */
+        /* MODAL */
         .modal { 
-            display: none; 
-            position: fixed; top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); 
-            z-index: 999; 
-            justify-content: center; align-items: center; 
-            flex-direction: column; 
-            padding: 20px;
+            display: none; position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; background: rgba(0,0,0,0.95); 
+            z-index: 999; justify-content: center; align-items: center; 
+            flex-direction: column; padding: 20px;
         }
-        
-        .modal img { 
-            max-height: 75vh; 
-            max-width: 90vw; 
-            object-fit: contain;
-            border: 4px solid var(--accent); 
-            border-radius: 20px; 
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
-        }
-
-        /* GHOST CONTAINER for Rendering */
-        #ghost-container {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-            width: 1220px;
-            height: 2712px;
-            overflow: hidden;
-        }
+        .modal img { max-height: 75vh; max-width: 90vw; object-fit: contain; border: 4px solid var(--accent); border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        #ghost-container { position: absolute; top: -9999px; left: -9999px; width: 1220px; height: 2712px; overflow: hidden; }
     </style>
 </head>
 <body>
 
 <div class="layout">
-    
     <div class="controls">
-        <div class="header">
-            <span><i class="fas fa-expand"></i> 1.5K Ultra Editor</span>
-        </div>
+        <div class="header"><span><i class="fas fa-magic"></i> Perfect Engine</span></div>
 
         <label>Theme</label>
         <div class="switch-row">
-            <button class="mode-btn active" onclick="setTheme('dark', this)">Dark Mode</button>
-            <button class="mode-btn" onclick="setTheme('light', this)">Light Mode</button>
+            <button class="mode-btn active" onclick="setTheme('dark', this)">Dark</button>
+            <button class="mode-btn" onclick="setTheme('light', this)">Light</button>
         </div>
 
-        <label>Content Type</label>
+        <label>Image Fit (Fix Stretches)</label>
         <div class="switch-row">
-            <button class="mode-btn active" id="btnTypePrice" onclick="setContentType('price')">Show Price</button>
-            <button class="mode-btn" id="btnTypeNote" onclick="setContentType('note')">Show Note</button>
+            <button class="mode-btn active" id="btnFit" onclick="setImageFit('contain')">Fit Whole Image</button>
+            <button class="mode-btn" id="btnFill" onclick="setImageFit('cover')">Zoom to Fill</button>
+        </div>
+
+        <label>Content</label>
+        <div class="switch-row">
+            <button class="mode-btn active" id="btnTypePrice" onclick="setContentType('price')">Price</button>
+            <button class="mode-btn" id="btnTypeNote" onclick="setContentType('note')">Note</button>
         </div>
 
         <div id="layoutToggleContainer">
-            <label>Price Layout</label>
+            <label>Price Mode</label>
             <div class="switch-row">
                 <button class="mode-btn active" id="btnCompare" onclick="toggleCompare(true)">Compare</button>
                 <button class="mode-btn" id="btnSolo" onclick="toggleCompare(false)">Solo</button>
@@ -290,7 +295,7 @@
         </div>
 
         <div class="input-group hidden" id="noteInputGroup">
-            <label>Custom Note Text</label>
+            <label>Note Text</label>
             <input type="text" id="noteIn" value="PRE-ORDER NOW" oninput="updateUI()">
         </div>
 
@@ -303,80 +308,53 @@
                     <option value="croma">Croma</option>
                 </select>
             </div>
-
             <div style="display: flex; gap: 10px;">
-                <div class="input-group" style="flex:1">
-                    <label>Market Price</label>
-                    <input type="number" id="priceOnline" value="319900" oninput="updateUI()">
-                </div>
-                <div class="input-group" style="flex:1">
-                    <label>Our Price</label>
-                    <input type="number" id="priceOur" value="289000" oninput="updateUI()">
-                </div>
+                <div class="input-group" style="flex:1"><label>Market</label><input type="number" id="priceOnline" value="319900" oninput="updateUI()"></div>
+                <div class="input-group" style="flex:1"><label>Our Price</label><input type="number" id="priceOur" value="289000" oninput="updateUI()"></div>
             </div>
         </div>
 
-        <button class="btn-gen" onclick="generate()">
-            <i class="fas fa-download"></i> DOWNLOAD (2712px)
-        </button>
+        <button class="btn-gen" onclick="generate()"><i class="fas fa-download"></i> DOWNLOAD (1.5K)</button>
     </div>
 
     <div class="preview-container">
         <div class="artboard" id="artboard-root" data-theme="dark">
             <div class="hero">
+                <div class="hero-bg" id="heroBg" style="background-image: url('https://placehold.co/1220x2712/111/444?text=Upload+Image');"></div>
+                <div class="hero-img" id="heroImg" style="background-image: url('https://placehold.co/1220x2712/111/444?text=Upload+Image');"></div>
+
                 <div class="brand-badge" id="brandBadge">
-                    <i class="fab fa-flipkart" id="brandIcon"></i>
-                    <span id="brandName">FLIPKART</span>
+                    <i class="fab fa-flipkart" id="brandIcon"></i><span id="brandName">FLIPKART</span>
                 </div>
                 <div class="discount-tag" id="discountTag">SAVE ₹30,900</div>
-                <img id="mainImage" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIHZpZXdCb3g9IjAgMCAxMjIwIDI3MTIiPjxyZWN0IHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIGZpbGw9IiMxYTFhMWEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjgwIiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4xLjVLVWx0cmE8L3RleHQ+PC9zdmc+">
             </div>
 
             <div class="glass-layer">
                 <div class="title" id="titleOut">MacBook Pro M3 Max (Space Black)</div>
-                
                 <div class="price-pill" id="priceContainer">
-                    <div class="side-left">
-                        <span class="lbl" id="onlineLbl">Market</span>
-                        <span class="old-price" id="valOnline">₹3,19,900</span>
-                    </div>
+                    <div class="side-left"><span class="lbl" id="onlineLbl">Market</span><span class="old-price" id="valOnline">₹3,19,900</span></div>
                     <div class="divider"></div>
-                    <div class="side-right">
-                        <span class="lbl" id="ourLbl" style="color: var(--accent);">Deal Price</span>
-                        <span class="big-price" id="valOur">₹2,89,000</span>
-                    </div>
+                    <div class="side-right"><span class="lbl" id="ourLbl" style="color: var(--accent);">Deal Price</span><span class="big-price" id="valOur">₹2,89,000</span></div>
                 </div>
-
-                <div class="note-pill" id="noteContainer">
-                    <span class="note-text" id="noteOut">PRE-ORDER NOW</span>
-                </div>
+                <div class="note-pill" id="noteContainer"><span class="note-text" id="noteOut">PRE-ORDER NOW</span></div>
             </div>
         </div>
     </div>
 </div>
 
 <div id="ghost-container"></div>
-
 <div class="modal" id="resultModal">
-    <div style="color: white; font-weight: bold; margin-bottom: 10px; font-family: Montserrat;">
-        <i class="fas fa-check-circle" style="color: #00ff00;"></i> Generated Successfully
-    </div>
+    <div style="color: white; margin-bottom: 10px; font-family: Montserrat;">Success!</div>
     <img id="finalImg" alt="Generated Ad">
     <div style="margin-top: 20px; display: flex; gap: 10px;">
-        <a id="downloadLink" class="btn-gen" style="text-decoration: none; padding: 12px 30px; display: inline-block; background: white; color: black; border: none;">
-            Save to Device
-        </a>
-        <button class="btn-gen" style="background: transparent; border: 1px solid white; padding: 12px 30px;" onclick="document.getElementById('resultModal').style.display='none'">
-            Close
-        </button>
+        <a id="downloadLink" class="btn-gen" style="text-decoration: none; padding: 12px 30px; display: inline-block; background: white; color: black; border: none;">Save</a>
+        <button class="btn-gen" style="background: transparent; border: 1px solid white; padding: 12px 30px;" onclick="document.getElementById('resultModal').style.display='none'">Close</button>
     </div>
 </div>
 
 <script>
-    // --- STATE ---
-    let state = { theme: 'dark', contentType: 'price', compareMode: true };
+    let state = { theme: 'dark', contentType: 'price', compareMode: true, imageFit: 'contain' };
 
-    // --- UI HELPERS ---
     function setTheme(mode, btn) {
         state.theme = mode;
         document.getElementById('artboard-root').setAttribute('data-theme', mode);
@@ -385,23 +363,33 @@
         updateUI();
     }
 
+    // NEW: Handle Image Fitting
+    function setImageFit(mode) {
+        state.imageFit = mode;
+        const heroImg = document.getElementById('heroImg');
+        const b1 = document.getElementById('btnFit');
+        const b2 = document.getElementById('btnFill');
+        
+        heroImg.style.backgroundSize = mode;
+        
+        if(mode === 'contain') {
+            b1.classList.add('active'); b2.classList.remove('active');
+        } else {
+            b1.classList.remove('active'); b2.classList.add('active');
+        }
+    }
+
     function setContentType(type) {
         state.contentType = type;
         document.getElementById('btnTypePrice').className = type === 'price' ? 'mode-btn active' : 'mode-btn';
         document.getElementById('btnTypeNote').className = type === 'note' ? 'mode-btn active' : 'mode-btn';
-
         const priceInputs = document.getElementById('priceInputGroup');
         const noteInput = document.getElementById('noteInputGroup');
         const layoutToggle = document.getElementById('layoutToggleContainer');
-
         if(type === 'price') {
-            priceInputs.style.display = 'block';
-            noteInput.style.display = 'none';
-            layoutToggle.style.display = 'block';
+            priceInputs.style.display = 'block'; noteInput.style.display = 'none'; layoutToggle.style.display = 'block';
         } else {
-            priceInputs.style.display = 'none';
-            noteInput.style.display = 'block';
-            layoutToggle.style.display = 'none';
+            priceInputs.style.display = 'none'; noteInput.style.display = 'block'; layoutToggle.style.display = 'none';
         }
         updateUI();
     }
@@ -416,54 +404,40 @@
     }
 
     function updateUI() {
-        // We need to update BOTH the visible artboard AND any future clones
         const roots = [document.getElementById('artboard-root')];
-        
         roots.forEach(root => {
             const priceCont = root.querySelector('.price-pill');
             const noteCont = root.querySelector('.note-pill');
             const discountTag = root.querySelector('.discount-tag');
             const brandBadge = root.querySelector('.brand-badge');
             
-            // Text values from inputs
             root.querySelector('.title').innerText = document.getElementById('titleIn').value;
             root.querySelector('.note-text').innerText = document.getElementById('noteIn').value;
 
             if (state.contentType === 'note') {
-                priceCont.style.display = 'none';
-                noteCont.style.display = 'flex';
-                discountTag.style.display = 'none';
-                brandBadge.style.display = 'none';
+                priceCont.style.display = 'none'; noteCont.style.display = 'flex'; discountTag.style.display = 'none'; brandBadge.style.display = 'none';
             } else {
-                priceCont.style.display = 'flex';
-                noteCont.style.display = 'none';
+                priceCont.style.display = 'flex'; noteCont.style.display = 'none';
                 brandBadge.style.display = state.compareMode ? 'flex' : 'none';
                 document.getElementById('brandGroup').style.opacity = state.compareMode ? '1' : '0.4';
-                
                 if(state.compareMode) {
-                    priceCont.classList.remove('solo');
-                    root.querySelector('.lbl:nth-of-type(2)').innerText = "Deal Price"; // Dirty selector fix
+                    priceCont.classList.remove('solo'); root.querySelector('.lbl:nth-of-type(2)').innerText = "Deal Price";
                 } else {
                     priceCont.classList.add('solo');
                 }
-
                 const online = Number(document.getElementById('priceOnline').value);
                 const our = Number(document.getElementById('priceOur').value);
                 root.querySelector('.old-price').innerText = '₹' + online.toLocaleString();
                 root.querySelector('.big-price').innerText = '₹' + our.toLocaleString();
-
                 const diff = online - our;
                 if(diff > 0) {
-                    discountTag.style.display = 'block';
-                    discountTag.innerText = 'SAVE ₹' + diff.toLocaleString();
+                    discountTag.style.display = 'block'; discountTag.innerText = 'SAVE ₹' + diff.toLocaleString();
                 } else {
                     discountTag.style.display = 'none';
                 }
             }
-
             const brand = document.getElementById('brandSelect').value;
             root.querySelector('span[id*="brandName"]').innerText = brand.toUpperCase();
-            
             let iconClass = 'fas fa-tag';
             if(brand === 'flipkart') iconClass = 'fab fa-flipkart';
             if(brand === 'amazon') iconClass = 'fab fa-amazon';
@@ -476,54 +450,41 @@
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                document.getElementById('mainImage').src = event.target.result;
+                const url = `url('${event.target.result}')`;
+                // Apply to both layers
+                document.getElementById('heroBg').style.backgroundImage = url;
+                document.getElementById('heroImg').style.backgroundImage = url;
             }
             reader.readAsDataURL(e.target.files[0]);
         }
     });
 
-    // --- GHOST CAPTURE LOGIC (THE FIX) ---
     function generate() {
         const btn = document.querySelector('.btn-gen');
         btn.innerHTML = 'RENDERING...';
-
-          // 1. Clone the node
         const originalNode = document.getElementById('artboard-root');
         const ghostNode = originalNode.cloneNode(true);
-        
-        // 2. Remove scaling ID and transform from Clone
         ghostNode.id = "ghost-artboard";
         ghostNode.style.transform = "none";
-        ghostNode.style.position = "static"; // Flow naturally in ghost container
+        ghostNode.style.position = "static";
         
-        // 3. Append to hidden ghost container
         const ghostContainer = document.getElementById('ghost-container');
         ghostContainer.innerHTML = '';
         ghostContainer.appendChild(ghostNode);
 
-        // 4. Capture the Ghost
         const bg = state.theme === 'light' ? '#f0f0f0' : '#111';
 
         html2canvas(ghostNode, {
-            scale: 1, 
-            useCORS: true, 
-            allowTaint: false, 
-            backgroundColor: bg,
-            width: 1220, 
-            height: 2712
+            scale: 1, useCORS: true, allowTaint: false, backgroundColor: bg,
+            width: 1220, height: 2712
         }).then(canvas => {
             const imgData = canvas.toDataURL("image/png");
-            
             document.getElementById('finalImg').src = imgData;
-            
             const dlLink = document.getElementById('downloadLink');
             dlLink.href = imgData;
             dlLink.download = "Ad_" + document.getElementById('titleIn').value.replace(/\s+/g, '_') + ".png";
-            
             document.getElementById('resultModal').style.display = 'flex';
-            btn.innerHTML = '<i class="fas fa-download"></i> DOWNLOAD (2712px)';
-            
-            // Clean up
+            btn.innerHTML = '<i class="fas fa-download"></i> DOWNLOAD (1.5K)';
             ghostContainer.innerHTML = '';
         });
     }

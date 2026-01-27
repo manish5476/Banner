@@ -1,31 +1,32 @@
+I understand exactly what happened.
+The Problem: Because we scaled the "preview" down with CSS (transform: scale(0.27)), the screenshot engine captured that tiny scaled version and drew it into the top-left corner of the massive canvas.
+The Fix: I have updated the code to use a "Ghost Capture" technique. When you click generate, it temporarily tells the engine to "ignore the preview scale" and capture the full 100% resolution version.
+I also fixed the Modal so the result doesn't look weirdly sized when you view it.
+Copy & Paste this Final Fixed Code:
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.5K Ultra-Res Ad Generator</title>
+    <title>1.5K Ultra Generator | Final Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         /* --- THEME VARIABLES --- */
         :root {
-            --accent: #ff4500; /* Dark Orange */
-            
-            /* Dark Mode */
+            --accent: #ff4500;
             --bg-body: #111;
             --panel-bg: #1a1a1a;
             --text-main: #fff;
             --text-sub: #ccc;
             --card-border: #333;
             
-            /* Glass Gradients (Optimized for Dark) */
             --glass-gradient: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.4) 100%);
             --glass-border: rgba(255, 255, 255, 0.15);
             --pill-bg: rgba(255, 255, 255, 0.1);
         }
 
-        /* Light Mode */
         [data-theme="light"] {
             --bg-body: #f0f0f0;
             --panel-bg: #fff;
@@ -98,7 +99,6 @@
         }
         input:focus { outline: none; border-color: var(--accent); }
 
-        /* BUTTONS */
         .switch-row { display: flex; gap: 10px; margin-bottom: 25px; }
         .mode-btn {
             flex: 1; padding: 12px; border: 2px solid var(--card-border);
@@ -117,19 +117,18 @@
         }
         .btn-gen:hover { transform: scale(1.02); }
 
-        /* --- PREVIEW WRAPPER (SCALING MAGIC) --- */
-        /* This scales the massive 1220x2712 artboard down to fit on screen */
+        /* --- PREVIEW CONTAINER --- */
         .preview-container {
-            width: 340px; /* Visible Width on Screen */
-            height: 756px; /* Visible Height (Aspect Ratio maintained) */
+            /* This is the visual box on the screen */
+            width: 340px; 
+            height: 756px; /* Aspect Ratio of 1220x2712 scaled down */
             position: relative;
-            /* Border to show the edge clearly */
             box-shadow: 0 50px 100px -20px rgba(0,0,0,0.6);
             border-radius: 20px;
-            overflow: hidden; /* Hide the overflow from scaling */
+            overflow: hidden; 
         }
 
-        /* --- THE REAL ARTBOARD (1220x2712) --- */
+        /* --- THE ARTBOARD (1220x2712) --- */
         .artboard {
             width: 1220px;
             height: 2712px;
@@ -137,7 +136,7 @@
             position: absolute;
             top: 0; left: 0;
             transform-origin: top left;
-            /* Magic Scale Calculation: 340 / 1220 = 0.2786 */
+            /* Scale it down for preview, but we will reset this for capture */
             transform: scale(0.278688); 
         }
 
@@ -147,10 +146,7 @@
         }
         .hero img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* --- HIGH RES TYPOGRAPHY & ELEMENTS --- */
-        /* Everything is roughly 3.4x larger than before */
-
-        /* BADGES */
+        /* HIGH RES ELEMENTS */
         .brand-badge {
             position: absolute; top: 60px; left: 60px;
             background: rgba(0,0,0,0.85); color: white;
@@ -170,7 +166,6 @@
             box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
 
-        /* GLASS LAYER */
         .glass-layer {
             position: absolute; bottom: 0; left: 0; width: 100%;
             height: auto;
@@ -192,7 +187,7 @@
             margin-bottom: 20px;
         }
 
-        /* PRICE PILL - HIGH RES */
+        /* PRICE PILL */
         .price-pill {
             display: flex; justify-content: space-between; align-items: flex-end;
             background: var(--pill-bg);
@@ -213,7 +208,7 @@
         .big-price { font-size: 5.5rem; color: var(--accent); font-weight: 900; font-family: 'Montserrat', sans-serif; line-height: 1; }
         .divider { width: 3px; height: 100px; background: var(--text-sub); opacity: 0.3; }
 
-        /* NOTE PILL - HIGH RES */
+        /* NOTE PILL */
         .note-pill {
             display: none;
             justify-content: center; align-items: center;
@@ -233,9 +228,27 @@
             text-shadow: 0 0 40px rgba(255, 69, 0, 0.4);
         }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 999; justify-content: center; align-items: center; flex-direction: column; }
-        .modal img { max-height: 80vh; border: 4px solid var(--accent); border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        /* MODAL FIX */
+        .modal { 
+            display: none; 
+            position: fixed; top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); 
+            z-index: 999; 
+            justify-content: center; align-items: center; 
+            flex-direction: column; 
+            padding: 20px;
+        }
+        
+        /* This ensures the image fits the screen but stays high quality */
+        .modal img { 
+            max-height: 75vh; 
+            max-width: 90vw; 
+            object-fit: contain;
+            border: 4px solid var(--accent); 
+            border-radius: 20px; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+        }
     </style>
 </head>
 <body>
@@ -311,14 +324,13 @@
 
     <div class="preview-container">
         <div class="artboard" id="artboard-root" data-theme="dark">
-            
             <div class="hero">
                 <div class="brand-badge" id="brandBadge">
                     <i class="fab fa-flipkart" id="brandIcon"></i>
                     <span id="brandName">FLIPKART</span>
                 </div>
                 <div class="discount-tag" id="discountTag">SAVE ₹30,900</div>
-                <img id="mainImage" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIHZpZXdCb3g9IjAgMCAxMjIwIDI3MTIiPjxyZWN0IHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIGZpbGw9IiMxMTEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjgwIiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4xMjIweDI3MTIgSERSPC90ZXh0Pjwvc3ZnPg==">
+                <img id="mainImage" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIHZpZXdCb3g9IjAgMCAxMjIwIDI3MTIiPjxyZWN0IHdpZHRoPSIxMjIwIiBoZWlnaHQ9IjI3MTIiIGZpbGw9IiMxYTFhMWEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjgwIiBmaWxsPSIjMzMzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj4xLjVLVWx0cmE8L3RleHQ+PC9zdmc+">
             </div>
 
             <div class="glass-layer">
@@ -345,16 +357,25 @@
 </div>
 
 <div class="modal" id="resultModal">
-    <div style="color: white; font-weight: bold; margin-bottom: 10px;">Full Resolution (1220 x 2712) Generated</div>
-    <img id="finalImg">
-    <button class="btn-gen" style="width: auto; padding: 12px 30px; margin-top: 20px; background: white; color: black;" onclick="document.getElementById('resultModal').style.display='none'">Close</button>
+    <div style="color: white; font-weight: bold; margin-bottom: 10px; font-family: Montserrat;">
+        <i class="fas fa-check-circle" style="color: #00ff00;"></i> Full Resolution (1220 x 2712) Generated
+    </div>
+    <img id="finalImg" alt="Generated Ad">
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <a id="downloadLink" class="btn-gen" style="text-decoration: none; padding: 12px 30px; display: inline-block; background: white; color: black; border: none;">
+            Save to Device
+        </a>
+        <button class="btn-gen" style="background: transparent; border: 1px solid white; padding: 12px 30px;" onclick="document.getElementById('resultModal').style.display='none'">
+            Close
+        </button>
+    </div>
 </div>
 
 <script>
     // --- STATE ---
     let state = { theme: 'dark', contentType: 'price', compareMode: true };
 
-    // --- LOGIC HANDLERS ---
+    // --- UI HELPERS ---
     function setTheme(mode, btn) {
         state.theme = mode;
         document.getElementById('artboard-root').setAttribute('data-theme', mode);
@@ -393,14 +414,12 @@
         updateUI();
     }
 
-    // --- UI UPDATE ENGINE ---
     function updateUI() {
         const priceCont = document.getElementById('priceContainer');
         const noteCont = document.getElementById('noteContainer');
         const discountTag = document.getElementById('discountTag');
         const brandBadge = document.getElementById('brandBadge');
 
-        // Text
         document.getElementById('titleOut').innerText = document.getElementById('titleIn').value;
         document.getElementById('noteOut').innerText = document.getElementById('noteIn').value;
 
@@ -412,7 +431,6 @@
         } else {
             priceCont.style.display = 'flex';
             noteCont.style.display = 'none';
-            
             brandBadge.style.display = state.compareMode ? 'flex' : 'none';
             document.getElementById('brandGroup').style.opacity = state.compareMode ? '1' : '0.4';
             
@@ -457,27 +475,41 @@
         }
     });
 
-    // --- GENERATE AT 1220x2712 ---
+     // --- GENERATE FUNCTION (FIXED) ---
     function generate() {
         const node = document.getElementById('artboard-root');
         const btn = document.querySelector('.btn-gen');
-        btn.innerHTML = 'RENDERING 1.5K...';
-        
         const bg = state.theme === 'light' ? '#f0f0f0' : '#111';
+        
+        btn.innerHTML = 'RENDERING...';
 
-        // NO SCALING NEEDED because the node is already 1220x2712
-        // We just need to capture it at scale: 1
-         html2canvas(node, {
-            scale: 1, // Output exact size
+        // THE FIX: onclone ensures html2canvas sees the FULL SIZE element, not the scaled preview
+        html2canvas(node, {
+            scale: 1, // Capture at 1:1 of the real size
             useCORS: true, 
             allowTaint: false, 
             backgroundColor: bg,
-            width: 1220,
+            width: 1220, // Explicitly set capture dimensions
             height: 2712,
             windowWidth: 1220,
-            windowHeight: 2712
+            windowHeight: 2712,
+            onclone: (clonedDoc) => {
+                const clonedNode = clonedDoc.getElementById('artboard-root');
+                // REMOVE THE PREVIEW SCALE FROM THE CLONE BEFORE CAPTURE
+                clonedNode.style.transform = 'none';
+                clonedNode.style.margin = '0';
+            }
         }).then(canvas => {
-            document.getElementById('finalImg').src = canvas.toDataURL("image/png");
+            const imgData = canvas.toDataURL("image/png");
+            
+            // Set up Modal
+            document.getElementById('finalImg').src = imgData;
+            
+            // Set up Download Link
+            const dlLink = document.getElementById('downloadLink');
+            dlLink.href = imgData;
+            dlLink.download = "Ad_" + document.getElementById('titleIn').value.replace(/\s+/g, '_') + ".png";
+            
             document.getElementById('resultModal').style.display = 'flex';
             btn.innerHTML = '<i class="fas fa-download"></i> DOWNLOAD (2712px)';
         });
@@ -488,3 +520,4 @@
 
 </body>
 </html>
+

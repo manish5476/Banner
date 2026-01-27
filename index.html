@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.5K Ultra Generator | Final Fix</title>
+    <title>1.5K Ultra Generator | Ghost Clone Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,7 +16,6 @@
             --text-main: #fff;
             --text-sub: #ccc;
             --card-border: #333;
-            
             --glass-gradient: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.4) 100%);
             --glass-border: rgba(255, 255, 255, 0.15);
             --pill-bg: rgba(255, 255, 255, 0.1);
@@ -29,7 +27,6 @@
             --text-main: #000;
             --text-sub: #555;
             --card-border: #ccc;
-            
             --glass-gradient: linear-gradient(to top, rgba(255,255,255,1) 30%, rgba(255,255,255,0.4) 100%);
             --glass-border: rgba(0, 0, 0, 0.1);
             --pill-bg: rgba(0, 0, 0, 0.05);
@@ -115,9 +112,8 @@
 
         /* --- PREVIEW CONTAINER --- */
         .preview-container {
-            /* This is the visual box on the screen */
             width: 340px; 
-            height: 756px; /* Aspect Ratio of 1220x2712 scaled down */
+            height: 756px; 
             position: relative;
             box-shadow: 0 50px 100px -20px rgba(0,0,0,0.6);
             border-radius: 20px;
@@ -132,7 +128,7 @@
             position: absolute;
             top: 0; left: 0;
             transform-origin: top left;
-            /* Scale it down for preview, but we will reset this for capture */
+            /* PREVIEW SCALING ONLY */
             transform: scale(0.278688); 
         }
 
@@ -183,7 +179,6 @@
             margin-bottom: 20px;
         }
 
-        /* PRICE PILL */
         .price-pill {
             display: flex; justify-content: space-between; align-items: flex-end;
             background: var(--pill-bg);
@@ -204,7 +199,6 @@
         .big-price { font-size: 5.5rem; color: var(--accent); font-weight: 900; font-family: 'Montserrat', sans-serif; line-height: 1; }
         .divider { width: 3px; height: 100px; background: var(--text-sub); opacity: 0.3; }
 
-        /* NOTE PILL */
         .note-pill {
             display: none;
             justify-content: center; align-items: center;
@@ -236,7 +230,6 @@
             padding: 20px;
         }
         
-        /* This ensures the image fits the screen but stays high quality */
         .modal img { 
             max-height: 75vh; 
             max-width: 90vw; 
@@ -244,6 +237,16 @@
             border: 4px solid var(--accent); 
             border-radius: 20px; 
             box-shadow: 0 0 50px rgba(0,0,0,0.5); 
+        }
+
+        /* GHOST CONTAINER for Rendering */
+        #ghost-container {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 1220px;
+            height: 2712px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -352,9 +355,11 @@
     </div>
 </div>
 
+<div id="ghost-container"></div>
+
 <div class="modal" id="resultModal">
     <div style="color: white; font-weight: bold; margin-bottom: 10px; font-family: Montserrat;">
-        <i class="fas fa-check-circle" style="color: #00ff00;"></i> Full Resolution (1220 x 2712) Generated
+        <i class="fas fa-check-circle" style="color: #00ff00;"></i> Generated Successfully
     </div>
     <img id="finalImg" alt="Generated Ad">
     <div style="margin-top: 20px; display: flex; gap: 10px;">
@@ -411,103 +416,115 @@
     }
 
     function updateUI() {
-        const priceCont = document.getElementById('priceContainer');
-        const noteCont = document.getElementById('noteContainer');
-        const discountTag = document.getElementById('discountTag');
-        const brandBadge = document.getElementById('brandBadge');
-
-        document.getElementById('titleOut').innerText = document.getElementById('titleIn').value;
-        document.getElementById('noteOut').innerText = document.getElementById('noteIn').value;
-
-        if (state.contentType === 'note') {
-            priceCont.style.display = 'none';
-            noteCont.style.display = 'flex';
-            discountTag.style.display = 'none';
-            brandBadge.style.display = 'none';
-        } else {
-            priceCont.style.display = 'flex';
-            noteCont.style.display = 'none';
-            brandBadge.style.display = state.compareMode ? 'flex' : 'none';
-            document.getElementById('brandGroup').style.opacity = state.compareMode ? '1' : '0.4';
-            
-            if(state.compareMode) {
-                priceCont.classList.remove('solo');
-                document.getElementById('ourLbl').innerText = "Deal Price";
-            } else {
-                priceCont.classList.add('solo');
-                document.getElementById('ourLbl').innerText = "Exclusive Offer";
-            }
-
-            const online = Number(document.getElementById('priceOnline').value);
-            const our = Number(document.getElementById('priceOur').value);
-            document.getElementById('valOnline').innerText = '₹' + online.toLocaleString();
-            document.getElementById('valOur').innerText = '₹' + our.toLocaleString();
-
-            const diff = online - our;
-            if(diff > 0) {
-                discountTag.style.display = 'block';
-                discountTag.innerText = 'SAVE ₹' + diff.toLocaleString();
-            } else {
-                discountTag.style.display = 'none';
-            }
-        }
-
-        const brand = document.getElementById('brandSelect').value;
-        document.getElementById('brandName').innerText = brand.toUpperCase();
-        document.getElementById('onlineLbl').innerText = state.compareMode ? brand.toUpperCase() : "MRP";
+        // We need to update BOTH the visible artboard AND any future clones
+        const roots = [document.getElementById('artboard-root')];
         
-        let iconClass = 'fas fa-tag';
-        if(brand === 'flipkart') iconClass = 'fab fa-flipkart';
-        if(brand === 'amazon') iconClass = 'fab fa-amazon';
-        if(brand === 'croma') iconClass = 'fas fa-shopping-bag';
-        document.getElementById('brandIcon').className = iconClass;
+        roots.forEach(root => {
+            const priceCont = root.querySelector('.price-pill');
+            const noteCont = root.querySelector('.note-pill');
+            const discountTag = root.querySelector('.discount-tag');
+            const brandBadge = root.querySelector('.brand-badge');
+            
+            // Text values from inputs
+            root.querySelector('.title').innerText = document.getElementById('titleIn').value;
+            root.querySelector('.note-text').innerText = document.getElementById('noteIn').value;
+
+            if (state.contentType === 'note') {
+                priceCont.style.display = 'none';
+                noteCont.style.display = 'flex';
+                discountTag.style.display = 'none';
+                brandBadge.style.display = 'none';
+            } else {
+                priceCont.style.display = 'flex';
+                noteCont.style.display = 'none';
+                brandBadge.style.display = state.compareMode ? 'flex' : 'none';
+                document.getElementById('brandGroup').style.opacity = state.compareMode ? '1' : '0.4';
+                
+                if(state.compareMode) {
+                    priceCont.classList.remove('solo');
+                    root.querySelector('.lbl:nth-of-type(2)').innerText = "Deal Price"; // Dirty selector fix
+                } else {
+                    priceCont.classList.add('solo');
+                }
+
+                const online = Number(document.getElementById('priceOnline').value);
+                const our = Number(document.getElementById('priceOur').value);
+                root.querySelector('.old-price').innerText = '₹' + online.toLocaleString();
+                root.querySelector('.big-price').innerText = '₹' + our.toLocaleString();
+
+                const diff = online - our;
+                if(diff > 0) {
+                    discountTag.style.display = 'block';
+                    discountTag.innerText = 'SAVE ₹' + diff.toLocaleString();
+                } else {
+                    discountTag.style.display = 'none';
+                }
+            }
+
+            const brand = document.getElementById('brandSelect').value;
+            root.querySelector('span[id*="brandName"]').innerText = brand.toUpperCase();
+            
+            let iconClass = 'fas fa-tag';
+            if(brand === 'flipkart') iconClass = 'fab fa-flipkart';
+            if(brand === 'amazon') iconClass = 'fab fa-amazon';
+            if(brand === 'croma') iconClass = 'fas fa-shopping-bag';
+            root.querySelector('i[class*="fa-"]').className = iconClass;
+        });
     }
 
     document.getElementById('imgInput').addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload = (event) => document.getElementById('mainImage').src = event.target.result;
+            reader.onload = (event) => {
+                document.getElementById('mainImage').src = event.target.result;
+            }
             reader.readAsDataURL(e.target.files[0]);
         }
     });
 
-     // --- GENERATE FUNCTION (FIXED) ---
+    // --- GHOST CAPTURE LOGIC (THE FIX) ---
     function generate() {
-        const node = document.getElementById('artboard-root');
         const btn = document.querySelector('.btn-gen');
-        const bg = state.theme === 'light' ? '#f0f0f0' : '#111';
-        
         btn.innerHTML = 'RENDERING...';
 
-        // THE FIX: onclone ensures html2canvas sees the FULL SIZE element, not the scaled preview
-        html2canvas(node, {
-            scale: 1, // Capture at 1:1 of the real size
+          // 1. Clone the node
+        const originalNode = document.getElementById('artboard-root');
+        const ghostNode = originalNode.cloneNode(true);
+        
+        // 2. Remove scaling ID and transform from Clone
+        ghostNode.id = "ghost-artboard";
+        ghostNode.style.transform = "none";
+        ghostNode.style.position = "static"; // Flow naturally in ghost container
+        
+        // 3. Append to hidden ghost container
+        const ghostContainer = document.getElementById('ghost-container');
+        ghostContainer.innerHTML = '';
+        ghostContainer.appendChild(ghostNode);
+
+        // 4. Capture the Ghost
+        const bg = state.theme === 'light' ? '#f0f0f0' : '#111';
+
+        html2canvas(ghostNode, {
+            scale: 1, 
             useCORS: true, 
             allowTaint: false, 
             backgroundColor: bg,
-            width: 1220, // Explicitly set capture dimensions
-            height: 2712,
-            windowWidth: 1220,
-            windowHeight: 2712,
-            onclone: (clonedDoc) => {
-                const clonedNode = clonedDoc.getElementById('artboard-root');
-                // REMOVE THE PREVIEW SCALE FROM THE CLONE BEFORE CAPTURE
-                clonedNode.style.transform = 'none';
-                clonedNode.style.margin = '0';
-            }
+            width: 1220, 
+            height: 2712
         }).then(canvas => {
             const imgData = canvas.toDataURL("image/png");
             
-            // Set up Modal
             document.getElementById('finalImg').src = imgData;
             
-            // Set up Download Link
             const dlLink = document.getElementById('downloadLink');
             dlLink.href = imgData;
             dlLink.download = "Ad_" + document.getElementById('titleIn').value.replace(/\s+/g, '_') + ".png";
             
             document.getElementById('resultModal').style.display = 'flex';
             btn.innerHTML = '<i class="fas fa-download"></i> DOWNLOAD (2712px)';
+            
+            // Clean up
+            ghostContainer.innerHTML = '';
         });
     }
 
@@ -516,4 +533,3 @@
 
 </body>
 </html>
-

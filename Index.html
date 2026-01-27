@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Gradient Ad Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            /* GLOBAL ACCENT: DARK ORANGE */
+            --accent: #ff4500; 
+            
+            /* Dark Mode (Default) */
+            --bg-body: #0f0f0f;
+            --panel-bg: #1a1a1a;
+            --text-main: #ffffff;
+            --text-sub: #cccccc;
+            --card-border: #333333;
+            
+            /* The Glass Gradient for Dark Mode */
+            --glass-gradient: linear-gradient(to top, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.6) 100%);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --price-pill-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Light Mode Overrides */
+        [data-theme="light"] {
+            --bg-body: #e6e6e6;
+            --panel-bg: #ffffff;
+            --text-main: #000000; /* Pitch Black for visibility */
+            --text-sub: #444444;
+            --card-border: #cccccc;
+            
+            /* The Glass Gradient for Light Mode */
+            --glass-gradient: linear-gradient(to top, rgba(255,255,255,0.98) 40%, rgba(255,255,255,0.7) 100%);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --price-pill-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+        }
+
+        /* --- CONTROLS PANEL --- */
+        .controls {
+            flex: 1;
+            min-width: 320px;
+            max-width: 420px;
+            background: var(--panel-bg);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: fit-content;
+            border: 1px solid var(--card-border);
+        }
+
+        .header {
+            color: var(--accent);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group { margin-bottom: 15px; }
+        label { display: block; color: var(--text-sub); font-size: 0.8rem; margin-bottom: 6px; font-weight: 600; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-body);
+            border: 2px solid var(--card-border);
+            color: var(--text-main);
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+
+        /* BUTTONS */
+        .switch-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mode-btn {
+            flex: 1; padding: 10px; border: 2px solid var(--card-border);
+            background: transparent; color: var(--text-sub);
+            border-radius: 8px; cursor: pointer; font-weight: 600;
+        }
+        .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .btn-gen {
+            width: 100%; padding: 15px;
+            background: linear-gradient(45deg, var(--accent), #ff7b00);
+            color: white;
+            font-weight: 800; border: none; border-radius: 12px;
+            cursor: pointer; font-size: 1rem; margin-top: 10px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(255, 69, 0, 0.3);
+        }
+
+        /* --- ARTBOARD (9:16) --- */
+        .artboard {
+            width: 360px; height: 640px;
+            background: #000; /* Default base */
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.5);
+            border: 8px solid var(--panel-bg);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        /* HERO IMAGE - FILLS SCREEN */
+        .hero {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+
+        .hero img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        /* BADGES */
+        .brand-badge {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(0,0,0,0.8); color: white;
+            padding: 6px 14px; border-radius: 30px;
+            display: flex; align-items: center; gap: 8px;
+            z-index: 10; backdrop-filter: blur(5px);
+            font-size: 0.75rem; font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .discount-tag {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--accent); color: white;
+            padding: 6px 12px; border-radius: 6px;
+            font-size: 0.85rem; font-weight: 800; z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- GLASS DATA LAYER --- */
+        .glass-layer {
+            position: absolute; 
+            bottom: 0; left: 0; width: 100%;
+            height: auto;
+            
+            /* THE MAGIC: Gradient + Blur */
+            background: var(--glass-gradient);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            
+            border-top: 1px solid var(--glass-border);
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            
+            z-index: 20;
+            padding: 30px 20px 25px 20px;
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.1rem; 
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.3;
+            text-align: center;
+            /* Ensure visibility on mixed backgrounds */
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+
+        /* PRICE CONTAINER */
+        .price-pill {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            background: var(--price-pill-bg);
+            padding: 12px 18px; border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .price-pill.solo { justify-content: center; border-color: var(--accent); background: rgba(255, 69, 0, 0.1); }
+        .price-pill.solo .side-left, .price-pill.solo .divider { display: none; }
+        .price-pill.solo .side-right { align-items: center; }
+        .price-pill.solo .big-price { font-size: 2.2rem; }
+
+        .side-left { display: flex; flex-direction: column; }
+        .side-right { display: flex; flex-direction: column; align-items: flex-end; }
+        
+        .lbl { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--text-sub); margin-bottom: 2px; }
+        .old-price { font-size: 1rem; text-decoration: line-through; color: var(--text-sub); font-weight: 600; }
+        .big-price { font-size: 1.8rem; color: var(--accent); font-weight: 900; font-family: 'Montserrat', sans-serif; line-height: 1; }
+        
+        .divider { width: 1px; height: 35px; background: var(--text-sub); opacity: 0.3; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999; justify-content: center; align-items: center; flex-direction: column; }
+        .modal img { max-height: 75vh; border: 4px solid var(--accent); border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    
+    <div class="controls">
+        <div class="header">
+            <span><i class="fas fa-layer-group"></i> Glass Editor</span>
+        </div>
+
+        <label>Theme Mode</label>
+        <div class="switch-row">
+            <button class="mode-btn active" onclick="setTheme('dark', this)">Dark Mode</button>
+            <button class="mode-btn" onclick="setTheme('light', this)">Light Mode</button>
+        </div>
+
+        <label>Layout Style</label>
+        <div class="switch-row">
+            <button class="mode-btn active" id="btnCompare" onclick="toggleCompare(true)">Comparison</button>
+            <button class="mode-btn" id="btnSolo" onclick="toggleCompare(false)">Solo Brand</button>
+        </div>
+
+        <div class="input-group">
+            <label>Upload Image</label>
+            <input type="file" id="imgInput" accept="image/*">
+        </div>
+
+        <div class="input-group">
+            <label>Product Name</label>
+            <input type="text" id="titleIn" value="Samsung Galaxy S24 Ultra (Titanium Gray)" oninput="updateUI()">
+        </div>
+
+        <div class="input-group" id="brandGroup">
+            <label>Competitor</label>
+            <select id="brandSelect" onchange="updateUI()">
+                <option value="flipkart">Flipkart</option>
+                <option value="amazon">Amazon</option>
+                <option value="croma">Croma</option>
+                <option value="myntra">Myntra</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <div class="input-group" style="flex:1">
+                <label>Market Price</label>
+                <input type="number" id="priceOnline" value="134999" oninput="updateUI()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Our Price</label>
+                <input type="number" id="priceOur" value="119000" oninput="updateUI()">
+            </div>
+        </div>
+
+        <button class="btn-gen" onclick="generate()">
+            <i class="fas fa-bolt"></i> GENERATE HD
+        </button>
+    </div>
+
+    <div class="artboard" id="artboard-root" data-theme="dark">
+        <div class="hero">
+            <div class="brand-badge" id="brandBadge">
+                <i class="fab fa-flipkart" id="brandIcon"></i>
+                <span id="brandName">FLIPKART</span>
+            </div>
+            <div class="discount-tag" id="discountTag">SAVE ₹15,999</div>
+            <img id="mainImage" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgNDAwIDYwMCI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiMyMjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjI0IiBmaWxsPSIjNDQ0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5QcmVtaXVtIEltYWdlPC90ZXh0Pjwvc3ZnPg==">
+        </div>
+
+        <div class="glass-layer">
+            <div class="title" id="titleOut">Samsung Galaxy S24 Ultra (Titanium Gray)</div>
+            
+            <div class="price-pill" id="priceContainer">
+                <div class="side-left">
+                    <span class="lbl" id="onlineLbl">Market</span>
+                    <span class="old-price" id="valOnline">₹1,34,999</span>
+                </div>
+                
+                <div class="divider"></div>
+
+                <div class="side-right">
+                    <span class="lbl" id="ourLbl" style="color: var(--accent);">Deal Price</span>
+                    <span class="big-price" id="valOur">₹1,19,000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="resultModal">
+    <img id="finalImg">
+    <button class="btn-gen" style="width: auto; padding: 12px 30px; margin-top: 20px; background: white; color: black;" onclick="document.getElementById('resultModal').style.display='none'">Close</button>
+</div>
+
+<script>
+    // --- STATE ---
+    let isCompare = true;
+
+    // --- 1. THEME LOGIC ---
+    function setTheme(mode, btn) {
+        document.getElementById('artboard-root').setAttribute('data-theme', mode);
+        document.querySelectorAll('.switch-row:first-of-type .mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateUI();
+    }
+
+    // --- 2. COMPARE LOGIC ---
+    function toggleCompare(state) {
+        isCompare = state;
+        const b1 = document.getElementById('btnCompare');
+        const b2 = document.getElementById('btnSolo');
+        
+        if(state) { b1.classList.add('active'); b2.classList.remove('active'); }
+        else { b1.classList.remove('active'); b2.classList.add('active'); }
+
+        updateUI();
+    }
+
+    // --- 3. UI UPDATER ---
+    function updateUI() {
+        // Toggle Elements
+        document.getElementById('brandBadge').style.display = isCompare ? 'flex' : 'none';
+        document.getElementById('brandGroup').style.opacity = isCompare ? '1' : '0.4';
+        
+        const priceRow = document.getElementById('priceContainer');
+        if(isCompare) {
+            priceRow.classList.remove('solo');
+            document.getElementById('ourLbl').innerText = "Deal Price";
+        } else {
+            priceRow.classList.add('solo');
+            document.getElementById('ourLbl').innerText = "Limited Offer";
+        }
+
+        // Text & Prices
+        document.getElementById('titleOut').innerText = document.getElementById('titleIn').value;
+        
+        const online = Number(document.getElementById('priceOnline').value);
+        const our = Number(document.getElementById('priceOur').value);
+        document.getElementById('valOnline').innerText = '₹' + online.toLocaleString();
+        document.getElementById('valOur').innerText = '₹' + our.toLocaleString();
+
+        // Discount Tag
+        const diff = online - our;
+        if(diff > 0) {
+            document.getElementById('discountTag').style.display = 'block';
+            document.getElementById('discountTag').innerText = 'SAVE ₹' + diff.toLocaleString();
+        } else {
+            document.getElementById('discountTag').style.display = 'none';
+        }
+
+        // Brand Icons
+        const brand = document.getElementById('brandSelect').value;
+        document.getElementById('brandName').innerText = brand.toUpperCase();
+        document.getElementById('onlineLbl').innerText = isCompare ? brand.toUpperCase() : "MRP";
+        
+        let iconClass = 'fas fa-tag';
+        if(brand === 'flipkart') iconClass = 'fab fa-flipkart';
+        if(brand === 'amazon') iconClass = 'fab fa-amazon';
+        if(brand === 'croma') iconClass = 'fas fa-shopping-bag';
+        if(brand === 'myntra') iconClass = 'fas fa-tshirt';
+        document.getElementById('brandIcon').className = iconClass;
+    }
+
+    // --- 4. IMAGE LOADER ---
+    document.getElementById('imgInput').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (event) => document.getElementById('mainImage').src = event.target.result;
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // --- 5. GENERATE ---
+    function generate() {
+        const node = document.getElementById('artboard-root');
+        const btn = document.querySelector('.btn-gen');
+        btn.innerHTML = 'RENDERING...';
+        
+        // Use exact background colors to prevent transparent PNG issues
+        const theme = node.getAttribute('data-theme');
+        const bg = theme === 'light' ? '#e6e6e6' : '#0f0f0f';
+
+        html2canvas(node, {
+            scale: 3, // HD Quality
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: bg
+        }).then(canvas => {
+            document.getElementById('finalImg').src = canvas.toDataURL("image/png");
+            document.getElementById('resultModal').style.display = 'flex';
+            btn.innerHTML = '<i class="fas fa-bolt"></i> GENERATE HD';
+        });
+    }
+
+    // Init
+    updateUI();
+</script>
+
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.5K Ultra | Perfect Image Engine</title>
+    <title>1.5K Studio | Rotate & Ad Engine</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,8 +16,6 @@
             --text-main: #fff;
             --text-sub: #ccc;
             --card-border: #333;
-            
-            /* Enhanced Gradient for readability */
             --glass-gradient: linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,0.6) 100%);
             --glass-border: rgba(255, 255, 255, 0.15);
             --pill-bg: rgba(255, 255, 255, 0.1);
@@ -98,7 +96,7 @@
         .mode-btn {
             flex: 1; padding: 12px; border: 2px solid var(--card-border);
             background: transparent; color: var(--text-sub);
-            border-radius: 10px; cursor: pointer; font-weight: 600;
+            border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
@@ -133,35 +131,32 @@
             transform: scale(0.278688); 
         }
 
-        /* --- NEW IMAGE ENGINE --- */
         .hero {
             height: 100%; width: 100%;
             position: absolute; top: 0; left: 0; z-index: 1;
             overflow: hidden;
         }
 
-        /* Layer 1: The Blurred Background (Atmosphere) */
+        /* BG Layer (Blurred) */
         .hero-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
             background-position: center;
-            filter: blur(60px) brightness(0.7); /* The magic sauce */
-            transform: scale(1.2); /* Remove white edges from blur */
+            filter: blur(60px) brightness(0.7);
+            transform: scale(1.2); 
             z-index: 1;
         }
 
-        /* Layer 2: The Main Product */
+        /* Main Image Layer */
         .hero-img {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: contain; /* Default to FIT, not stretch */
+            background-size: contain; 
             background-position: center;
             background-repeat: no-repeat;
             z-index: 2;
-            /* Default drop shadow for depth */
             filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
         }
 
-        /* HIGH RES ELEMENTS */
         .brand-badge {
             position: absolute; top: 60px; left: 60px;
             background: rgba(0,0,0,0.85); color: white;
@@ -216,7 +211,6 @@
 
         .side-left { display: flex; flex-direction: column; }
         .side-right { display: flex; flex-direction: column; align-items: flex-end; }
-        
         .lbl { font-size: 2rem; text-transform: uppercase; font-weight: 700; color: var(--text-sub); margin-bottom: 10px; letter-spacing: 2px; }
         .old-price { font-size: 3.2rem; text-decoration: line-through; color: var(--text-sub); font-weight: 600; }
         .big-price { font-size: 5.5rem; color: var(--accent); font-weight: 900; font-family: 'Montserrat', sans-serif; line-height: 1; }
@@ -241,7 +235,6 @@
             text-shadow: 0 0 40px rgba(255, 69, 0, 0.4);
         }
 
-        /* MODAL */
         .modal { 
             display: none; position: fixed; top: 0; left: 0; 
             width: 100%; height: 100%; background: rgba(0,0,0,0.95); 
@@ -256,7 +249,7 @@
 
 <div class="layout">
     <div class="controls">
-        <div class="header"><span><i class="fas fa-magic"></i> Perfect Engine</span></div>
+        <div class="header"><span><i class="fas fa-camera"></i> Studio Editor</span></div>
 
         <label>Theme</label>
         <div class="switch-row">
@@ -264,10 +257,16 @@
             <button class="mode-btn" onclick="setTheme('light', this)">Light</button>
         </div>
 
-        <label>Image Fit (Fix Stretches)</label>
+        <label>Image Rotation</label>
         <div class="switch-row">
-            <button class="mode-btn active" id="btnFit" onclick="setImageFit('contain')">Fit Whole Image</button>
-            <button class="mode-btn" id="btnFill" onclick="setImageFit('cover')">Zoom to Fill</button>
+            <button class="mode-btn" onclick="rotateImage(-90)"><i class="fas fa-undo"></i> Left</button>
+            <button class="mode-btn" onclick="rotateImage(90)"><i class="fas fa-redo"></i> Right</button>
+        </div>
+
+        <label>Image Fit</label>
+        <div class="switch-row">
+            <button class="mode-btn active" id="btnFit" onclick="setImageFit('contain')"><i class="fas fa-expand"></i> Fit Whole</button>
+            <button class="mode-btn" id="btnFill" onclick="setImageFit('cover')"><i class="fas fa-search-plus"></i> Zoom Fill</button>
         </div>
 
         <label>Content</label>
@@ -344,7 +343,7 @@
 
 <div id="ghost-container"></div>
 <div class="modal" id="resultModal">
-    <div style="color: white; margin-bottom: 10px; font-family: Montserrat;">Success!</div>
+    <div style="color: white; margin-bottom: 10px; font-family: Montserrat;">High Resolution Ready</div>
     <img id="finalImg" alt="Generated Ad">
     <div style="margin-top: 20px; display: flex; gap: 10px;">
         <a id="downloadLink" class="btn-gen" style="text-decoration: none; padding: 12px 30px; display: inline-block; background: white; color: black; border: none;">Save</a>
@@ -354,6 +353,10 @@
 
 <script>
     let state = { theme: 'dark', contentType: 'price', compareMode: true, imageFit: 'contain' };
+    
+    // IMAGE STATE
+    let rawImage = null; // Stores the original file
+    let currentRotation = 0; // Tracks rotation
 
     function setTheme(mode, btn) {
         state.theme = mode;
@@ -363,20 +366,14 @@
         updateUI();
     }
 
-    // NEW: Handle Image Fitting
     function setImageFit(mode) {
         state.imageFit = mode;
         const heroImg = document.getElementById('heroImg');
         const b1 = document.getElementById('btnFit');
         const b2 = document.getElementById('btnFill');
-        
         heroImg.style.backgroundSize = mode;
-        
-        if(mode === 'contain') {
-            b1.classList.add('active'); b2.classList.remove('active');
-        } else {
-            b1.classList.remove('active'); b2.classList.add('active');
-        }
+        if(mode === 'contain') { b1.classList.add('active'); b2.classList.remove('active'); } 
+        else { b1.classList.remove('active'); b2.classList.add('active'); }
     }
 
     function setContentType(type) {
@@ -445,20 +442,61 @@
             root.querySelector('i[class*="fa-"]').className = iconClass;
         });
     }
-
+ // --- ROTATION LOGIC ---
     document.getElementById('imgInput').addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                const url = `url('${event.target.result}')`;
-                // Apply to both layers
-                document.getElementById('heroBg').style.backgroundImage = url;
-                document.getElementById('heroImg').style.backgroundImage = url;
+                const img = new Image();
+                img.onload = () => {
+                    rawImage = img; // Store original
+                    currentRotation = 0; // Reset rotation
+                    applyImageToCanvas(); // Process
+                };
+                img.src = event.target.result;
             }
             reader.readAsDataURL(e.target.files[0]);
         }
     });
 
+    function rotateImage(deg) {
+        if(!rawImage) return;
+        currentRotation = (currentRotation + deg) % 360;
+        applyImageToCanvas();
+    }
+
+    // This function creates a temporary canvas, draws the image rotated, 
+    // and returns a clean dataURL. This fixes orientation issues perfectly.
+    function applyImageToCanvas() {
+        if(!rawImage) return;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Swap dimensions if rotating 90 or 270
+        if (currentRotation % 180 !== 0) {
+            canvas.width = rawImage.height;
+            canvas.height = rawImage.width;
+        } else {
+            canvas.width = rawImage.width;
+            canvas.height = rawImage.height;
+        }
+
+        // Move context to center
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        // Rotate
+        ctx.rotate(currentRotation * Math.PI / 180);
+        // Draw image centered
+        ctx.drawImage(rawImage, -rawImage.width / 2, -rawImage.height / 2);
+
+        const processedUrl = canvas.toDataURL();
+        const urlStr = `url('${processedUrl}')`;
+
+        document.getElementById('heroBg').style.backgroundImage = urlStr;
+        document.getElementById('heroImg').style.backgroundImage = urlStr;
+    }
+
+    // --- GENERATION ---
     function generate() {
         const btn = document.querySelector('.btn-gen');
         btn.innerHTML = 'RENDERING...';

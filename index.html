@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.5K Studio | Rotate & Ad Engine</title>
+    <title>1.5K Studio Pro | Custom Backgrounds</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800;900&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
@@ -92,6 +92,13 @@
         }
         input:focus { outline: none; border-color: var(--accent); }
 
+        .file-controls { display: flex; gap: 10px; align-items: center; }
+        .reset-btn {
+            background: #333; color: #fff; border: none; padding: 0 15px; height: 50px; border-radius: 10px; cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .reset-btn:hover { background: #444; }
+
         .switch-row { display: flex; gap: 10px; margin-bottom: 25px; }
         .mode-btn {
             flex: 1; padding: 12px; border: 2px solid var(--card-border);
@@ -137,14 +144,22 @@
             overflow: hidden;
         }
 
-        /* BG Layer (Blurred) */
+        /* BG Layer */
         .hero-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
             background-position: center;
+            /* DEFAULT: Blurred for Product Image */
             filter: blur(60px) brightness(0.7);
             transform: scale(1.2); 
             z-index: 1;
+            transition: all 0.5s ease;
+        }
+
+        /* Custom BG State (No Blur) */
+        .hero-bg.custom {
+            filter: brightness(0.8); /* Slight dim for text readability */
+            transform: scale(1); /* No zoom needed */
         }
 
         /* Main Image Layer */
@@ -249,7 +264,7 @@
 
 <div class="layout">
     <div class="controls">
-        <div class="header"><span><i class="fas fa-camera"></i> Studio Editor</span></div>
+        <div class="header"><span><i class="fas fa-layer-group"></i> Studio Pro</span></div>
 
         <label>Theme</label>
         <div class="switch-row">
@@ -257,16 +272,21 @@
             <button class="mode-btn" onclick="setTheme('light', this)">Light</button>
         </div>
 
-        <label>Image Rotation</label>
-        <div class="switch-row">
-            <button class="mode-btn" onclick="rotateImage(-90)"><i class="fas fa-undo"></i> Left</button>
-            <button class="mode-btn" onclick="rotateImage(90)"><i class="fas fa-redo"></i> Right</button>
+        <label>Product Image</label>
+        <div class="input-group">
+            <input type="file" id="imgInput" accept="image/*">
+            <div style="display: flex; gap: 5px; margin-top: 5px;">
+                <button class="mode-btn" onclick="rotateImage(-90)"><i class="fas fa-undo"></i></button>
+                <button class="mode-btn" onclick="rotateImage(90)"><i class="fas fa-redo"></i></button>
+                <button class="mode-btn active" id="btnFit" onclick="setImageFit('contain')">Fit</button>
+                <button class="mode-btn" id="btnFill" onclick="setImageFit('cover')">Zoom</button>
+            </div>
         </div>
 
-        <label>Image Fit</label>
-        <div class="switch-row">
-            <button class="mode-btn active" id="btnFit" onclick="setImageFit('contain')"><i class="fas fa-expand"></i> Fit Whole</button>
-            <button class="mode-btn" id="btnFill" onclick="setImageFit('cover')"><i class="fas fa-search-plus"></i> Zoom Fill</button>
+        <label>Custom Background (Optional)</label>
+        <div class="input-group file-controls">
+            <input type="file" id="bgInput" accept="image/*">
+            <button class="reset-btn" onclick="clearCustomBg()" title="Reset to Auto-Blur"><i class="fas fa-times"></i></button>
         </div>
 
         <label>Content</label>
@@ -281,11 +301,6 @@
                 <button class="mode-btn active" id="btnCompare" onclick="toggleCompare(true)">Compare</button>
                 <button class="mode-btn" id="btnSolo" onclick="toggleCompare(false)">Solo</button>
             </div>
-        </div>
-
-        <div class="input-group">
-            <label>Upload Image</label>
-            <input type="file" id="imgInput" accept="image/*">
         </div>
 
         <div class="input-group">
@@ -343,7 +358,7 @@
 
 <div id="ghost-container"></div>
 <div class="modal" id="resultModal">
-    <div style="color: white; margin-bottom: 10px; font-family: Montserrat;">High Resolution Ready</div>
+    <div style="color: white; margin-bottom: 10px; font-family: Montserrat;">Studio Export Ready</div>
     <img id="finalImg" alt="Generated Ad">
     <div style="margin-top: 20px; display: flex; gap: 10px;">
         <a id="downloadLink" class="btn-gen" style="text-decoration: none; padding: 12px 30px; display: inline-block; background: white; color: black; border: none;">Save</a>
@@ -352,11 +367,9 @@
 </div>
 
 <script>
-    let state = { theme: 'dark', contentType: 'price', compareMode: true, imageFit: 'contain' };
-    
-    // IMAGE STATE
-    let rawImage = null; // Stores the original file
-    let currentRotation = 0; // Tracks rotation
+    let state = { theme: 'dark', contentType: 'price', compareMode: true, imageFit: 'contain', hasCustomBg: false };
+    let rawImage = null; // Product
+    let currentRotation = 0; 
 
     function setTheme(mode, btn) {
         state.theme = mode;
@@ -442,16 +455,17 @@
             root.querySelector('i[class*="fa-"]').className = iconClass;
         });
     }
- // --- ROTATION LOGIC ---
+
+    // --- ROTATION & PRODUCT IMAGE ---
     document.getElementById('imgInput').addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    rawImage = img; // Store original
-                    currentRotation = 0; // Reset rotation
-                    applyImageToCanvas(); // Process
+                    rawImage = img; 
+                    currentRotation = 0; 
+                    applyImageToCanvas();
                 };
                 img.src = event.target.result;
             }
@@ -465,35 +479,57 @@
         applyImageToCanvas();
     }
 
-    // This function creates a temporary canvas, draws the image rotated, 
-    // and returns a clean dataURL. This fixes orientation issues perfectly.
     function applyImageToCanvas() {
         if(!rawImage) return;
-
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-
-        // Swap dimensions if rotating 90 or 270
-        if (currentRotation % 180 !== 0) {
-            canvas.width = rawImage.height;
-            canvas.height = rawImage.width;
-        } else {
-            canvas.width = rawImage.width;
-            canvas.height = rawImage.height;
-        }
-
-        // Move context to center
+        if (currentRotation % 180 !== 0) { canvas.width = rawImage.height; canvas.height = rawImage.width; } 
+        else { canvas.width = rawImage.width; canvas.height = rawImage.height; }
         ctx.translate(canvas.width / 2, canvas.height / 2);
-        // Rotate
         ctx.rotate(currentRotation * Math.PI / 180);
-        // Draw image centered
         ctx.drawImage(rawImage, -rawImage.width / 2, -rawImage.height / 2);
+        
+        const processedUrl = `url('${canvas.toDataURL()}')`;
+        
+        // Always set the Hero Image (Product)
+        document.getElementById('heroImg').style.backgroundImage = processedUrl;
+        
+        // Only set Background if we are NOT using a custom one
+        if(!state.hasCustomBg) {
+            document.getElementById('heroBg').style.backgroundImage = processedUrl;
+        }
+    }
 
-        const processedUrl = canvas.toDataURL();
-        const urlStr = `url('${processedUrl}')`;
+    // --- BACKGROUND MANAGER ---
+    document.getElementById('bgInput').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const url = `url('${event.target.result}')`;
+                const bgEl = document.getElementById('heroBg');
+                
+                bgEl.style.backgroundImage = url;
+                bgEl.classList.add('custom'); // Removes blur
+                state.hasCustomBg = true;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
 
-        document.getElementById('heroBg').style.backgroundImage = urlStr;
-        document.getElementById('heroImg').style.backgroundImage = urlStr;
+    function clearCustomBg() {
+        // Reset file input
+        document.getElementById('bgInput').value = '';
+        state.hasCustomBg = false;
+        
+        const bgEl = document.getElementById('heroBg');
+        bgEl.classList.remove('custom'); // Re-adds blur
+        
+        // Re-apply product image to background if exists
+        if(rawImage) {
+            applyImageToCanvas();
+        } else {
+             bgEl.style.backgroundImage = "url('https://placehold.co/1220x2712/111/444?text=Upload+Image')";
+        }
     }
 
     // --- GENERATION ---

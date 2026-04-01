@@ -624,7 +624,7 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 28px;
-    width: 420px;
+    width: 460px;
     max-width: 90vw;
     position: relative;
   }
@@ -640,12 +640,12 @@
   .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
   .download-options {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
     margin-bottom: 20px;
   }
   .download-opt {
-    padding: 14px;
+    padding: 14px 6px;
     border-radius: 10px;
     border: 2px solid var(--border);
     cursor: pointer;
@@ -656,9 +656,9 @@
   }
   .download-opt:hover { border-color: var(--accent); }
   .download-opt.selected { border-color: var(--gold); background: rgba(245,200,66,0.05); }
-  .download-opt-icon { font-size: 28px; margin-bottom: 6px; }
+  .download-opt-icon { font-size: 24px; margin-bottom: 6px; }
   .download-opt-name { font-size: 13px; font-weight: 600; color: var(--text); }
-  .download-opt-desc { font-size: 11px; color: var(--text2); }
+  .download-opt-desc { font-size: 10px; color: var(--text2); }
   .modal-close {
     position: absolute;
     top: 12px; right: 12px;
@@ -1096,32 +1096,49 @@
       <div class="download-opt selected" onclick="selectFormat('png',this)">
         <div class="download-opt-icon">🖼</div>
         <div class="download-opt-name">PNG</div>
-        <div class="download-opt-desc">Full quality, transparent support</div>
+        <div class="download-opt-desc">High Quality</div>
       </div>
       <div class="download-opt" onclick="selectFormat('jpg',this)">
         <div class="download-opt-icon">📷</div>
         <div class="download-opt-name">JPEG</div>
-        <div class="download-opt-desc">Smaller file, web optimized</div>
+        <div class="download-opt-desc">Web Optimized</div>
+      </div>
+      <div class="download-opt" onclick="selectFormat('video',this)">
+        <div class="download-opt-icon">🎥</div>
+        <div class="download-opt-name">Video</div>
+        <div class="download-opt-desc">Animated MP4</div>
       </div>
     </div>
-    <div class="section-label">Scale</div>
-    <div style="display:flex;gap:8px;margin-bottom:20px">
-      <button class="download-opt" style="flex:1;padding:10px" onclick="selectScale(1,this)">
-        <div class="download-opt-name">1×</div>
-        <div class="download-opt-desc">Original</div>
-      </button>
-      <button class="download-opt selected" style="flex:1;padding:10px" onclick="selectScale(2,this)">
-        <div class="download-opt-name">2×</div>
-        <div class="download-opt-desc">Retina</div>
-      </button>
-      <button class="download-opt" style="flex:1;padding:10px" onclick="selectScale(3,this)">
-        <div class="download-opt-name">3×</div>
-        <div class="download-opt-desc">Max Quality</div>
-      </button>
+    
+    <div id="video-export-opts" style="display:none; margin-bottom:20px;">
+      <div class="section-label">Video Duration (<span id="vid-dur-val">5</span>s)</div>
+      <input type="range" min="1" max="15" value="5" id="vid-duration" oninput="document.getElementById('vid-dur-val').textContent=this.value" style="margin-top:6px;">
+      <div style="font-size: 11px; color: var(--text3); text-align: center; margin-top: 8px;">
+        *Video export supports animations, layers, and playing video assets.
+      </div>
     </div>
-    <div style="font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 12px;">
-      *Note: Video layers will be captured as a static frame (snapshot) when exported to PNG or JPG.
+
+    <div id="image-export-opts">
+      <div class="section-label">Scale</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px">
+        <button class="download-opt" style="flex:1;padding:10px" onclick="selectScale(1,this)">
+          <div class="download-opt-name">1×</div>
+          <div class="download-opt-desc">Original</div>
+        </button>
+        <button class="download-opt selected" style="flex:1;padding:10px" onclick="selectScale(2,this)">
+          <div class="download-opt-name">2×</div>
+          <div class="download-opt-desc">Retina</div>
+        </button>
+        <button class="download-opt" style="flex:1;padding:10px" onclick="selectScale(3,this)">
+          <div class="download-opt-name">3×</div>
+          <div class="download-opt-desc">Max Quality</div>
+        </button>
+      </div>
+      <div id="video-disclaimer" style="font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 12px;">
+        *Note: Video layers will be captured as a static frame (snapshot) when exported to PNG or JPG.
+      </div>
     </div>
+
     <button class="btn btn-gold" style="width:100%;justify-content:center;padding:12px;font-size:15px" onclick="downloadAd()">⬇ Download Now</button>
   </div>
 </div>
@@ -1129,7 +1146,7 @@
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="loading-spinner"></div>
-  <div class="loading-text">Rendering your ad…</div>
+  <div class="loading-text" id="loading-text">Rendering your ad…</div>
 </div>
 
 <!-- TOAST -->
@@ -2212,6 +2229,14 @@ function selectFormat(fmt, el) {
   downloadFormat = fmt;
   document.querySelectorAll('.download-options .download-opt').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
+  
+  if (fmt === 'video') {
+    document.getElementById('video-export-opts').style.display = 'block';
+    document.getElementById('image-export-opts').style.display = 'none';
+  } else {
+    document.getElementById('video-export-opts').style.display = 'none';
+    document.getElementById('image-export-opts').style.display = 'block';
+  }
 }
 
 function applyCustomSize() {
@@ -2239,7 +2264,14 @@ function selectScale(scale, el) {
 
 function downloadAd() {
   closeDownload();
+  
+  if (downloadFormat === 'video') {
+    exportVideo();
+    return;
+  }
+
   const loading = document.getElementById('loading-overlay');
+  document.getElementById('loading-text').textContent = "Rendering your ad…";
   loading.classList.add('show');
 
   // Deselect all
@@ -2276,6 +2308,172 @@ function downloadAd() {
       console.error(err);
     });
   }, 100);
+}
+
+async function exportVideo() {
+  const loading = document.getElementById('loading-overlay');
+  const loadingText = document.getElementById('loading-text');
+  loading.classList.add('show');
+  
+  // Deselect all
+  document.querySelectorAll('.ad-layer').forEach(el => {
+    el.classList.remove('selected');
+    if(el.classList.contains('editing')) el.blur();
+  });
+  selectedLayerId = null;
+  updatePropsPanel();
+
+  loadingText.textContent = "Preparing video export... (1/3)";
+
+  // Video recording uses 1x scale to ensure steady framerates, unless custom handled.
+  // We'll enforce a max dimensions limit to prevent browser crashes during video encode
+  let scale = 1;
+  const maxDim = 1920; 
+  if (canvasW > maxDim || canvasH > maxDim) {
+    scale = Math.min(maxDim/canvasW, maxDim/canvasH);
+  }
+  
+  const expW = canvasW * scale;
+  const expH = canvasH * scale;
+
+  const adCanvas = document.getElementById('ad-canvas');
+  const originalBg = adCanvas.style.background;
+  const originalBgImg = adCanvas.style.backgroundImage;
+  const overlayLayer = document.getElementById('bg-overlay-layer');
+  const originalOverlayOp = overlayLayer.style.opacity;
+  const originalOverlayBg = overlayLayer.style.background;
+  const originalOverlayBgImg = overlayLayer.style.backgroundImage;
+
+  // STEP 1: Capture Pure Background
+  layers.forEach(l => { document.getElementById(l.id).style.display = 'none'; });
+  const bgCanvas = await html2canvas(adCanvas, { scale, width: canvasW, height: canvasH, useCORS: true });
+
+  // STEP 2: Capture Foreground (Hide videos, show rest)
+  loadingText.textContent = "Rendering foreground... (2/3)";
+  adCanvas.style.background = 'transparent';
+  adCanvas.style.backgroundImage = 'none';
+  overlayLayer.style.background = 'transparent';
+  overlayLayer.style.backgroundImage = 'none';
+  
+  layers.forEach(l => {
+    if (l.type === 'video' || l.hidden) {
+      document.getElementById(l.id).style.display = 'none';
+    } else {
+      document.getElementById(l.id).style.display = l.type === 'cta-btn' ? 'inline-block' : 'block';
+    }
+  });
+
+  const fgCanvas = await html2canvas(adCanvas, { scale, width: canvasW, height: canvasH, useCORS: true, backgroundColor: null });
+
+  // Restore DOM
+  adCanvas.style.background = originalBg;
+  adCanvas.style.backgroundImage = originalBgImg;
+  overlayLayer.style.opacity = originalOverlayOp;
+  overlayLayer.style.background = originalOverlayBg;
+  overlayLayer.style.backgroundImage = originalOverlayBgImg;
+  layers.forEach(l => {
+    if (l.hidden) return;
+    document.getElementById(l.id).style.display = l.type === 'cta-btn' ? 'inline-block' : 'block';
+  });
+
+  // STEP 3: Recording Loop
+  loadingText.textContent = "Recording video frames... (3/3)";
+  const recordCanvas = document.createElement('canvas');
+  recordCanvas.width = expW;
+  recordCanvas.height = expH;
+  const ctx = recordCanvas.getContext('2d');
+
+  const fps = 30;
+  const stream = recordCanvas.captureStream(fps);
+  const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+  const recorder = new MediaRecorder(stream, { mimeType });
+  const chunks = [];
+  
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.onstop = () => {
+    loadingText.textContent = "Processing file... (Done)";
+    const blob = new Blob(chunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ts = new Date().toISOString().slice(0,10);
+    a.href = url;
+    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    a.download = `ad_${canvasW}x${canvasH}_${ts}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    loading.classList.remove('show');
+    showToast('✅ Video Downloaded!');
+  };
+
+  const videoLayers = layers.filter(l => l.type === 'video' && !l.hidden);
+  const videoElements = videoLayers.map(l => document.getElementById(l.id).querySelector('video'));
+  videoElements.forEach(v => { v.play(); });
+
+  const durationMs = parseInt(document.getElementById('vid-duration').value) * 1000;
+  let isRecording = true;
+
+  recorder.start();
+
+  function drawFrame() {
+    if (!isRecording) return;
+    ctx.clearRect(0, 0, expW, expH);
+    
+    // Draw background
+    ctx.drawImage(bgCanvas, 0, 0, expW, expH);
+
+    // Draw Videos with transformations
+    ctx.save();
+    ctx.scale(scale, scale);
+    videoLayers.forEach((l, i) => {
+      const vid = videoElements[i];
+      if (!vid) return;
+      
+      ctx.save();
+      const cx = l.x + l.w/2;
+      const cy = l.y + l.h/2;
+      ctx.translate(cx, cy);
+      ctx.rotate(l.rotation * Math.PI / 180);
+      ctx.translate(-cx, -cy);
+
+      ctx.globalAlpha = l.opacity;
+      if (l.filter) ctx.filter = l.filter;
+      if (l.blendMode && l.blendMode !== 'normal') {
+        ctx.globalCompositeOperation = getCanvasBlendMode(l.blendMode);
+      }
+
+      if (l.borderRadius) {
+         ctx.beginPath();
+         if (ctx.roundRect) ctx.roundRect(l.x, l.y, l.w, l.h, l.borderRadius);
+         else ctx.rect(l.x, l.y, l.w, l.h);
+         ctx.clip();
+      }
+
+      ctx.drawImage(vid, l.x, l.y, l.w, l.h);
+      ctx.restore();
+    });
+    ctx.restore();
+
+    // Draw Foreground overlay
+    ctx.drawImage(fgCanvas, 0, 0, expW, expH);
+
+    requestAnimationFrame(drawFrame);
+  }
+  
+  drawFrame();
+
+  setTimeout(() => {
+    isRecording = false;
+    recorder.stop();
+  }, durationMs);
+}
+
+function getCanvasBlendMode(cssBlendMode) {
+  const map = {
+    'normal': 'source-over', 'multiply': 'multiply', 'screen': 'screen',
+    'overlay': 'overlay', 'darken': 'darken', 'lighten': 'lighten',
+    'color-dodge': 'color-dodge', 'difference': 'difference'
+  };
+  return map[cssBlendMode] || 'source-over';
 }
 
 // ============================================================
